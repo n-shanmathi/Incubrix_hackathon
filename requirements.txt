@@ -1,0 +1,9 @@
+fastapi>=0.115,<1
+uvicorn[standard]>=0.34,<1
+python-multipart>=0.0.20,<1
+pydantic-settings>=2.7,<3
+requests>=2.32,<3
+pytest>=8,<9
+httpx>=0.28,<1
+imageio-ffmpeg>=0.6,<1
+pyttsx3>=2.98,<3
