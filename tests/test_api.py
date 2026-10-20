@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 import pytest
 
+from app import main
 from app.main import app
 from app.pipeline import (
     PipelineError,
@@ -21,6 +22,18 @@ client = TestClient(app)
 def test_health_and_ready():
     assert client.get("/health").json() == {"status": "ok"}
     assert client.get("/ready").json() == {"status": "ready"}
+
+
+def test_frontend_serves_production_assets_and_spa_routes(monkeypatch, tmp_path):
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "index.html").write_text("<html>studio</html>", encoding="utf-8")
+    (tmp_path / "assets" / "app.js").write_text("console.log('studio')", encoding="utf-8")
+    monkeypatch.setattr(main, "FRONTEND_DIST", tmp_path)
+
+    assert client.get("/").text == "<html>studio</html>"
+    assert client.get("/dashboard").text == "<html>studio</html>"
+    assert client.get("/assets/app.js").text == "console.log('studio')"
+    assert client.get("/api/not-a-route").status_code == 404
 
 
 def test_job_listing_and_provider_status_are_safe(monkeypatch):

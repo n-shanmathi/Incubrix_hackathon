@@ -15,6 +15,7 @@ from .storage import JobStore
 
 app = FastAPI(title=settings.app_name, version="0.1.0")
 store = JobStore(settings.database_path)
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 ALLOWED_SUFFIXES = {".json", ".srt", ".mp4", ".jpg", ".jpeg"}
 JOB_ID_PATTERN = re.compile(r"^[a-f0-9]{32}$")
 
@@ -30,6 +31,9 @@ def response_from_row(row) -> JobResponse:
 
 @app.get("/", response_class=HTMLResponse)
 def index() -> str:
+    frontend_index = FRONTEND_DIST / "index.html"
+    if frontend_index.is_file():
+        return HTMLResponse(frontend_index.read_text(encoding="utf-8"))
     return """<!doctype html><html><head><meta charset="utf-8"><title>ScriptFlow AI</title>
     <style>body{font:16px system-ui;max-width:900px;margin:2rem auto;padding:0 1rem}
     textarea{width:100%;max-width:760px}label{display:block;margin:.7rem 0}
@@ -252,3 +256,19 @@ def get_file(job_id: str, filename: str):
     if not path.is_file():
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(path)
+
+
+@app.get("/{asset_path:path}", include_in_schema=False)
+def frontend_route(asset_path: str):
+    if asset_path == "api" or asset_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="Not found")
+    frontend_root = FRONTEND_DIST.resolve()
+    asset = (frontend_root / asset_path).resolve()
+    if frontend_root not in asset.parents:
+        raise HTTPException(status_code=404, detail="Not found")
+    if asset.is_file():
+        return FileResponse(asset)
+    frontend_index = frontend_root / "index.html"
+    if frontend_index.is_file():
+        return FileResponse(frontend_index)
+    raise HTTPException(status_code=404, detail="Not found")

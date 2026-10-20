@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: scriptflow-ai
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: FOOTAGE_PROVIDER
+        value: pixabay
+      - key: TTS_PROVIDER
+        value: pyttsx3
+      - key: REAL_RENDERING
+        value: "true"
+      - key: PIXABAY_API_KEY
+        sync: false

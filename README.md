@@ -42,6 +42,35 @@ Open http://127.0.0.1:5173. Vite proxies `/api` requests to the local FastAPI
 server. Production frontend assets can be checked with `npm run build` from
 `frontend/`; the API remains a separately launched service.
 
+## Deploy a live demo on Render
+
+The repository includes a Render Blueprint and Dockerfile for a single-service
+deployment. The image builds the React studio, serves it with FastAPI, and
+installs FFmpeg/FFprobe plus the local `pyttsx3` voice dependencies. The initial
+configuration uses Pixabay for real footage; add the API key as a private
+environment variable in Render, never in this repository:
+
+```text
+FOOTAGE_PROVIDER=pixabay
+PIXABAY_API_KEY=<set privately in the Render dashboard>
+TTS_PROVIDER=pyttsx3
+REAL_RENDERING=true
+```
+
+To deploy, connect the GitHub repository to Render and create a new Blueprint
+from `render.yaml`. Set `PIXABAY_API_KEY` when prompted, then deploy and open
+the generated `onrender.com` URL. The `/health` endpoint is used for the
+service health check. Confirm Pixabay credentials and the service-status page
+before recording a real-footage demo.
+
+The Blueprint uses Render's free web-service plan. Its local SQLite database,
+Pixabay cache, and generated media are **ephemeral**: they can be lost after a
+restart, sleep, or redeploy, and the first request after sleep may be slow.
+This is suitable for a temporary demo, not durable job storage. Render free
+services also have limited compute and may not reliably complete long renders.
+Use persistent storage and an appropriate paid instance if results must survive
+restarts or the service must remain available throughout a review period.
+
 ## Media dependencies on Windows
 
 `ffmpeg` and `ffprobe` must be from the same official FFmpeg build. The simplest
@@ -209,5 +238,4 @@ ffmpeg -y -ss 5 -i E:\Incubrix\data\jobs\<job-id>\scriptflow-16x9.mp4 -frames:v 
 Do not count a completed job or an MP4 file alone as evidence of a successful
 visual render. If Pixabay credentials are not configured, the expected behavior
 is an explicit failed job and no MP4.
-
 
