@@ -6,6 +6,7 @@ import pytest
 from app import main
 from app.main import app
 from app.pipeline import (
+    LocalTTS,
     PipelineError,
     format_srt_timestamp,
     segment_script,
@@ -17,6 +18,34 @@ from app.pipeline import (
 
 
 client = TestClient(app)
+
+
+def test_local_tts_selects_available_linux_english_voice(monkeypatch, tmp_path):
+    import sys
+    from types import SimpleNamespace
+
+    class FakeEngine:
+        voice = None
+
+        def setProperty(self, name, value):
+            if name == "voice":
+                self.voice = value
+
+        def save_to_file(self, _text, destination):
+            Path(destination).write_bytes(b"audio")
+
+        def runAndWait(self):
+            pass
+
+    engine = FakeEngine()
+    monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.setitem(sys.modules, "pyttsx3", SimpleNamespace(init=lambda: engine))
+    destination = tmp_path / "narration.wav"
+
+    LocalTTS().synthesize("hello", destination)
+
+    assert engine.voice == "en"
+    assert destination.read_bytes() == b"audio"
 
 
 def test_health_and_ready():

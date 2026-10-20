@@ -46,8 +46,10 @@ server. Production frontend assets can be checked with `npm run build` from
 
 The repository includes a Render Blueprint and Dockerfile for a single-service
 deployment. The image builds the React studio, serves it with FastAPI, and
-installs FFmpeg/FFprobe plus the local `pyttsx3` voice dependencies. The initial
-configuration uses Pixabay for real footage; add the API key as a private
+installs FFmpeg/FFprobe plus the local `pyttsx3` voice dependencies. On Linux,
+the renderer explicitly selects the installed English eSpeak voice to avoid
+locale-dependent voice lookup failures. The initial configuration uses Pixabay
+for real footage; add the API key as a private
 environment variable in Render, never in this repository:
 
 ```text
@@ -238,4 +240,3 @@ ffmpeg -y -ss 5 -i E:\Incubrix\data\jobs\<job-id>\scriptflow-16x9.mp4 -frames:v 
 Do not count a completed job or an MP4 file alone as evidence of a successful
 visual render. If Pixabay credentials are not configured, the expected behavior
 is an explicit failed job and no MP4.
-

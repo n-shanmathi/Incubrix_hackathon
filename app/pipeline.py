@@ -3,6 +3,7 @@ import hashlib
 import re
 import shutil
 import subprocess
+import sys
 import time
 import wave
 from importlib import import_module
@@ -286,6 +287,8 @@ class LocalTTS:
                 "'pip install pyttsx3', or configure an external TTS adapter."
             ) from exc
         engine = pyttsx3.init()
+        if sys.platform.startswith("linux"):
+            engine.setProperty("voice", "en")
         engine.save_to_file(text, str(destination))
         engine.runAndWait()
         if not destination.is_file() or destination.stat().st_size == 0:
