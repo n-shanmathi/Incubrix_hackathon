@@ -16,7 +16,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     REAL_RENDERING=true
 
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y ffmpeg espeak libespeak1 fonts-dejavu-core \
+    && apt-get install --no-install-recommends -y ffmpeg espeak-ng fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

@@ -279,6 +279,27 @@ class TTSProvider(Protocol):
 
 class LocalTTS:
     def synthesize(self, text: str, destination: Path) -> None:
+        if sys.platform.startswith("linux"):
+            executable = shutil.which("espeak-ng")
+            if executable is None:
+                raise PipelineError(
+                    "Linux narration requires the espeak-ng executable. "
+                    "Install the espeak-ng system package."
+                )
+            try:
+                subprocess.run(
+                    [executable, "-v", "en-us", "-w", str(destination), text],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+            except subprocess.CalledProcessError as exc:
+                detail = (exc.stderr or exc.stdout or "unknown eSpeak NG error").strip()[-500:]
+                raise PipelineError(f"Linux narration failed in eSpeak NG: {detail}") from exc
+            if not destination.is_file() or destination.stat().st_size == 0:
+                raise PipelineError("The Linux TTS provider did not produce an audio file.")
+            return
+
         try:
             import pyttsx3
         except ImportError as exc:
@@ -287,8 +308,6 @@ class LocalTTS:
                 "'pip install pyttsx3', or configure an external TTS adapter."
             ) from exc
         engine = pyttsx3.init()
-        if sys.platform.startswith("linux"):
-            engine.setProperty("voice", "en")
         engine.save_to_file(text, str(destination))
         engine.runAndWait()
         if not destination.is_file() or destination.stat().st_size == 0:
